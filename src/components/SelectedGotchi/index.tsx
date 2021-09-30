@@ -3,15 +3,19 @@ import "./styles.css";
 interface Props {
   name: string;
   traits: Array<Number>;
+  svg: string;
 }
 
-export const SelectedGotchi = ({ name, traits }: Props) => {
+export const SelectedGotchi = ({ name, traits, svg }: Props) => {
   return (
     <div className="selected-gotchi-container">
       <div className="name-container">
         <h2>{name}</h2>
       </div>
-      <div className="svg-container" />
+      <div
+        className="svg-container"
+        dangerouslySetInnerHTML={{ __html: svg }}
+      />
       <div className="traits-container">
         <div className="trait">
           <p>⚡ Energy</p>

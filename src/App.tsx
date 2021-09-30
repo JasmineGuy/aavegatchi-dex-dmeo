@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { request } from "graphql-request";
-import { Gotchi, QueryResponse } from "./types/index";
+import { Gotchi, QueryResponse, Collateral } from "./types/index";
 import { GotchiListing } from "./components/GotchiListing";
 import { SelectedGotchi } from "./components/SelectedGotchi";
 import Web3 from "web3";
@@ -18,7 +18,10 @@ function App() {
   const [gotchis, setGotchis] = useState<Array<Gotchi>>([]);
   const [selectedGotchi, setSelectedGotchi] = useState<number>(0);
   const [contract, setContract] = useState<Contract | null>(null);
-  const [collaterals, setCollaterals] = useState([]);
+  const [collaterals, setCollaterals] = useState<Array<Collateral>>([]);
+  const [gotchiSVG, setGotchiSVG] = useState<string>("");
+
+  // console.log("diamondABI:", diamondABI);
 
   const connectToWeb3 = () => {
     const web3 = new Web3(Web3.givenProvider);
@@ -49,22 +52,45 @@ function App() {
     connectToWeb3();
   }, []);
 
-  // useEffect(() => {
-  //   if (!!contract) {
-  //     const fetchAavegotchiCollaterals = async () => {
-  //       const collaterals = await contract.methods.getCollateralInfo().call();
-  //       setCollaterals(collaterals);
-  //     };
-  //     fetchAavegotchiCollaterals();
-  //   }
-  // }, [contract]);
+  useEffect(() => {
+    if (!!contract) {
+      console.log("contract:", contract);
+      const fetchAavegotchiCollaterals = async () => {
+        const collaterals = await contract.methods.getCollateralInfo(1).call();
+        console.log(collaterals);
+        setCollaterals(collaterals);
+      };
+      fetchAavegotchiCollaterals();
+    }
+  }, [contract]);
 
+  useEffect(() => {
+    const getAavegotchiSVG = async (tokenId: string) => {
+      const svg = await contract?.methods.getAavegotchiSvg(tokenId).call();
+      setGotchiSVG(svg);
+    };
+
+    if (contract && gotchis.length > 0) {
+      getAavegotchiSVG(gotchis[selectedGotchi].id);
+    }
+  }, [selectedGotchi, contract, gotchis]);
+
+  const getCollateralColor = (gotchiCollateral: string) => {
+    const collateral = collaterals.find(
+      (item) => item.collateralType.toLowerCase() === gotchiCollateral
+    );
+    if (collateral) {
+      return collateral.collateralTypeInfo.primaryColor.replace("0x", "#");
+    }
+    return "white";
+  };
   return (
     <div className="App">
       <div className="container">
         <div className="selected-container">
           {gotchis.length > 0 && (
             <SelectedGotchi
+              svg={gotchiSVG}
               name={gotchis[selectedGotchi].name}
               traits={gotchis[selectedGotchi].withSetsNumericTraits}
             />
@@ -76,11 +102,9 @@ function App() {
               key={gotchi.id}
               id={gotchi.id}
               name={gotchi.name}
-              collateralColor="black"
-              // selectGotchi={() => null}
-              // selected={false}
               selectGotchi={() => setSelectedGotchi(i)}
               selected={i === selectedGotchi}
+              collateralColor={getCollateralColor(gotchi.collateral)}
             />
           ))}
         </div>

@@ -43,6 +43,10 @@
   margin: 0;
   text-transform: uppercase;
 }
+.svg-container .gotchi-bg,
+.wearable-bg {
+  display: none;
+}
 
 @media (min-width: 768px) {
   .selected-gotchi-container {
